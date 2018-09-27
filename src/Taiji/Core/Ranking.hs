@@ -67,7 +67,7 @@ pageRank_ :: Graph 'D NetNode Double
           -> [Double]
 pageRank_ gr = pagerank gr 0.85 (Just getNodeW) (Just id)
   where
-    getNodeW = transform_node_weight . fromMaybe (-10) . _node_scaled_expression
+    getNodeW = transform_node_weight . fromMaybe 0 . _node_scaled_expression
 
 -- | Compute p-values for PageRank scores, by randomizing the networks.
 getRankPvalue :: Int   -- ^ The number of randomization to be performed
@@ -107,5 +107,5 @@ outputRanks inputs = do
     toBS nm xs = B.intercalate "\t" $ nm : map toShortest xs
 
 transform_node_weight :: Double -> Double
-transform_node_weight = exp
+transform_node_weight = exp . abs
 {-# INLINE transform_node_weight #-}

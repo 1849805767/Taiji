@@ -157,6 +157,18 @@ lp :: Int -> [Double] -> Double
 lp p = (**(1/fromIntegral p)) . foldl' (+) 0 . map (**fromIntegral p)
 {-# INLINE lp #-}
 
+repressors :: S.Set GeneName
+repressors = S.fromList ["AES", "BAZ1A", "Bhlhe40", "BRCA2", "BRIP1", "BTG2"
+    , "CALR", "CARHSP1", "CBX2", "CSDA", "DEK", "DENND4A", "FBXW7", "FHL2"
+    , "HELLS", "HMGN2", "HOPX", "KLF11", "Klf8", "MCM5", "MLF1IP", "MLLT1"
+    , "Prdm1", "RBL2", "SAP30", "SART1", "SETD8", "SLA2", "SMAD7", "SNAI3"
+    , "SUV39H1", "TSC22D3", "TSHZ1", "UHRF1", "ZFP598", "Atf7", "Bcl6", "Bcl6b"
+    , "Bhlhe40", "Cic", "Crebzf", "Egr3", "Erf", "Etv3", "Hbp1", "Hesx1"
+    , "Hic1", "Hivep1", "Homez", "Id1", "Jdp2", "Kdm2b", "Klf8", "Mbd1"
+    , "Mbd2", "Mecp2", "Msc", "Mypop", "Nfil3", "Nr2f6", "Pou6f1", "Prdm1"
+    , "Sp2", "Srebf2", "Tgif1", "Tgif2", "Vax2", "Zbtb1", "Zbtb4", "Zfp128"
+    , "Zfp161", "Zfp187", "Zfp202", "Zfp263", "Zfp281", "Zscan10"]
+
 -- | Build the network from files containing the information of nodes and edges.
 mkNetwork :: FilePath  -- ^ nodes
           -> FilePath  -- ^ edges
@@ -164,7 +176,7 @@ mkNetwork :: FilePath  -- ^ nodes
 mkNetwork nodeFl edgeFl = do
     nodeMap <- M.fromList . map ((_node_name &&& id) . nodeFromLine) .
         tail . B.lines <$> B.readFile nodeFl
-    runResourceT $ fromLabeledEdges' edgeFl (toEdge nodeMap)
+    fmap (filterGraph repressors) $ runResourceT $ fromLabeledEdges' edgeFl (toEdge nodeMap)
   where
     toEdge nodeMap fl = sourceFileBS fl .| linesUnboundedAsciiC .|
         (dropC 1 >> mapC f) 
@@ -175,6 +187,12 @@ mkNetwork nodeFl edgeFl = do
           where
             [f1,f2,f3,_] = B.split ',' l
 {-# INLINE mkNetwork #-}
+
+filterGraph :: S.Set GeneName -> Graph 'D NetNode Double -> Graph 'D NetNode Double
+filterGraph s gr = efilter f gr
+  where
+    f ((fr, to), _) = not $ _node_name (nodeLab gr to) `S.member` s &&
+        fromJust (_node_scaled_expression $ nodeLab gr fr) > 0
 
 -- | Read network files as nodes and edges
 readNodesAndEdges :: FilePath   -- ^ nodes
