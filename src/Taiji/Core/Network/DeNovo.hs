@@ -169,6 +169,29 @@ repressors = S.fromList ["AES", "BAZ1A", "Bhlhe40", "BRCA2", "BRIP1", "BTG2"
     , "Sp2", "Srebf2", "Tgif1", "Tgif2", "Vax2", "Zbtb1", "Zbtb4", "Zfp128"
     , "Zfp161", "Zfp187", "Zfp202", "Zfp263", "Zfp281", "Zscan10"]
 
+both' :: S.Set GeneName
+both' = S.fromList ["Ar", "Arid5a", "Arid5b", "Ascl2", "Atf2", "Atf3", "Bach1"
+    , "Bach2", "Cdc5l", "Cebpa", "Cebpb", "Cebpd", "Cebpg", "Clock"
+    , "Creb1", "Crem", "Ctcf", "Cux1", "E2f1", "E2f2", "E2f3", "E2f4"
+    , "E2f5", "E2f6", "E2f7", "E2f8", "Egr1", "Elf2", "Elf3", "Elk3"
+    , "Elk4", "Eomes", "Esr1", "Esrra", "Etv6", "Fli1", "Foxk1", "Foxo1"
+    , "Foxo3", "Foxo4", "Foxp1", "Foxp3", "Gata1", "Gata3", "Glis2", "Hes1"
+    , "Hes5", "Hhex", "Hmbox1", "Hmga2", "Hoxa7", "Hoxb4", "Hsf1", "Hsf4"
+    , "Ikzf1", "Irf1", "Irf2", "Irf3", "Jun", "Junb", "Klf12", "Klf4", "Lcor"
+    , "Lef1", "Mafk", "Max", "Mef2a", "Mef2c", "Mitf", "Mlx", "Mnt", "Myb"
+    , "Myc", "Mzf1", "Nanog", "Nfatc1", "Nfatc2", "Nfatc3", "Nfix", "Nfkb1"
+    , "Nr1h2", "Nr2c1", "Nr3c1", "Nr4a2", "Nr4a3", "Ovol1", "Patz1", "Pax5"
+    , "Phf21a", "Plag1", "Pou2f1", "Pou5f1", "Ppard", "Pparg", "Prdm11"
+    , "Rara", "Rarb", "Rarg", "Rel", "Rela", "Rfx3", "Rfx5", "Rora", "Rorc"
+    , "Rreb1", "Runx1", "Runx2", "Rxra", "Sfpi1", "Smad3", "Smarcc2"
+    , "Snai1", "Sox5", "Sox6", "Sp1", "Srebf1", "Stat3", "Stat6", "Tbx21"
+    , "Tcf3", "Tcf4", "Tcf7", "Tcf7l1", "Tcf7l2", "Terf2", "Trp53", "Vdr"
+    , "Xbp1", "Yy1", "Zbtb7b", "Zeb1", "Zfp143", "Zfp238", "Zfp691", "ATAD2"
+    , "ATXN1", "BRCA1", "DNMT3B", "E2f2", "E2f3", "Fli1", "FMR1", "FOXM1"
+    , "Gata3", "HLX", "HMGB2", "HMGN5", "HNRNPD", "Hsf4", "Irf1", "KDM4A"
+    , "Klf12", "MAF", "PHF10", "PHF19", "Runx2", "Runx3", "Rxra", "Tbx21"
+    , "TCF19", "Tcf7l2", "TLE1", "YY2", "ZBED4"]
+
 -- | Build the network from files containing the information of nodes and edges.
 mkNetwork :: FilePath  -- ^ nodes
           -> FilePath  -- ^ edges
@@ -176,7 +199,7 @@ mkNetwork :: FilePath  -- ^ nodes
 mkNetwork nodeFl edgeFl = do
     nodeMap <- M.fromList . map ((_node_name &&& id) . nodeFromLine) .
         tail . B.lines <$> B.readFile nodeFl
-    fmap (filterGraph repressors) $ runResourceT $ fromLabeledEdges' edgeFl (toEdge nodeMap)
+    fmap (filterGraph (repressors <> both')) $ runResourceT $ fromLabeledEdges' edgeFl (toEdge nodeMap)
   where
     toEdge nodeMap fl = sourceFileBS fl .| linesUnboundedAsciiC .|
         (dropC 1 >> mapC f) 
